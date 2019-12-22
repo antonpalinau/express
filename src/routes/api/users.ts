@@ -1,94 +1,73 @@
-import { NextFunction, Request, Response, Router } from "express";
+import { Request, Response, Router } from "express";
 import uuid from "uuid";
 import { users } from "../../model/usersModel";
 import { IUser } from "../../types";
 import { schema } from "./users.post.put.schema";
+import { validateSchema } from '../../validation'
 
-const router = Router();
-
-const normalizeErrors = (errors: any) => {
-    const normilizedErrors = errors.map((error: any) => {
-        const { path, message } = error;
-
-        return { message, path };
-    });
-
-    return {
-        normilizedErrors,
-        status: "failed",
-    };
-};
-
-const validateSchema = (schema: any) => (req: Request, res: Response, next: NextFunction) => {
-    const { error = {} } = schema.validate(req.body, {
-        abortEarly: false,
-        allowUnknown: false,
-    });
-
-    if (error.isJoi) {
-        res.status(400).json(normalizeErrors(error.details));
-    } else {
-        next();
-    }
-};
+const router: Router = Router();
 
 router.get("/", (req: Request, res: Response) => res.json(users));
 
 router.get("/:id", (req: Request, res: Response) => {
-    const user = users.filter((user) => user.id === req.params.id);
+    const user: IUser[] = users.filter((user: IUser): boolean => user.id === req.params.id);
+
     if (user.length) {
-        res.json(user);
-    } else {
-        res.json({ msg: "user not found" });
+        return res.json(user);
     }
+
+    res.json({ msg: "User not found" });
 });
 
 router.post("/", validateSchema(schema), (req: Request, res: Response) => {
+    const { login, password, age } = req.body;
     const newUser: IUser = {
-        age: req.body.age,
+        age,
         id: uuid.v4(),
         isDeleted: false,
-        login: req.body.login,
-        password: req.body.password,
+        login,
+        password
     };
 
     users.push(newUser);
-    res.json({ msg: "new user is created", users });
+    res.json({ msg: "New user is created", users });
 });
 
 router.put("/:id", validateSchema(schema), (req: Request, res: Response) => {
-    const found = users.some((user) => user.id === req.params.id);
+    const id: string = req.params.id;
+    const { login, password, age } = req.body;
+    const found: boolean = users.some((user: IUser): boolean => user.id === id);
 
     if (found) {
-        users.forEach((user) => {
-            if (user.id === req.params.id) {
-                user.login = req.body.login;
-                user.password = req.body.password;
-                user.age = req.body.age;
+        users.forEach((user: IUser) => {
+            if (user.id === id) {
+                user.login = login;
+                user.password = password;
+                user.age = age;
 
-                res.json({ msg: `user with the id of ${req.params.id} was updated`, user });
+                return res.json({ msg: `User with the id of ${id} was updated`, user });
             }
         });
-    } else {
-        res.status(400).json({ msg: `No user with the id of ${req.params.id}` });
     }
+
+    res.status(400).json({ msg: `No user with the id of ${id}` });
 });
 
 router.delete("/:id", (req: Request, res: Response) => {
-    const found = users.some((user) => user.id === req.params.id);
+    const id: string = req.params.id;
+    const found: boolean = users.some((user: IUser): boolean => user.id === id);
 
     if (found) {
-        users.forEach((user) => {
-            if (user.id === req.params.id) {
-                // validation
+        users.forEach((user: IUser) => {
+            if (user.id === id) {
                 user.isDeleted = true;
 
-                res.json({ msg: `user with the id of ${req.params.id} was softly deleted`, user });
+                return res.json({ msg: `User with the id of ${id} was softly deleted`, user });
             }
         });
-    } else {
-        res.status(400).json({ msg: `No user with the id of ${req.params.id}` });
     }
+
+    res.status(400).json({ msg: `No user with the id of ${id}` });
 });
 
 export default router;
