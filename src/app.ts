@@ -9,6 +9,5 @@ app.use("/api/users", usersRouter);
 app.use("/api/getautosuggestusers", autoSuggestRouter);
 
 app.listen(5000, () => {
-    /* tslint:disable-next-line */
     console.log("server is running")
 });

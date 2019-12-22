@@ -2,18 +2,18 @@ import { Request, Response, Router } from "express";
 import uuid from "uuid";
 import { users } from "../../model/usersModel";
 import { IUser } from "../../types";
+import { validateSchema } from "../../validation";
 import { schema } from "./users.post.put.schema";
-import { validateSchema } from '../../validation'
 
 const router: Router = Router();
 
 router.get("/", (req: Request, res: Response) => res.json(users));
 
 router.get("/:id", (req: Request, res: Response) => {
-    const user: IUser[] = users.filter((user: IUser): boolean => user.id === req.params.id);
+    const foundUser: IUser[] = users.filter((user: IUser): boolean => user.id === req.params.id);
 
-    if (user.length) {
-        return res.json(user);
+    if (foundUser.length) {
+        return res.json(foundUser);
     }
 
     res.json({ msg: "User not found" });
@@ -26,7 +26,7 @@ router.post("/", validateSchema(schema), (req: Request, res: Response) => {
         id: uuid.v4(),
         isDeleted: false,
         login,
-        password
+        password,
     };
 
     users.push(newUser);

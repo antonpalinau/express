@@ -1,5 +1,5 @@
-import { NextFunction, Request, Response } from "express";
 import { ObjectSchema, ValidationResult } from "@hapi/joi";
+import { NextFunction, Request, Response } from "express";
 
 const normalizeErrors = (errors: object[]) => {
     const normilizedErrors = errors.map((error: any) => {
@@ -15,7 +15,7 @@ const normalizeErrors = (errors: object[]) => {
 };
 
 export const validateSchema = (schema: ObjectSchema) => (req: Request, res: Response, next: NextFunction) => {
-    const { error }: ValidationResult= schema.validate(req.body, {
+    const { error }: ValidationResult = schema.validate(req.body, {
         abortEarly: false,
         allowUnknown: false,
     });
